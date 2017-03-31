@@ -32,8 +32,13 @@ public class LinkedList2<T> implements Iterable<T> {
 
     public Node search(T value) {
         Node x = nil.next;
-        while (x != nil && x.key != value) {
+        nil.key = value;
+        while (x.key != value) {
             x = x.next;
+        }
+        nil.key = null;
+        if (x == nil) {
+            return null;
         }
         return x;
     }
