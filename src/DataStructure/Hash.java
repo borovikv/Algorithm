@@ -17,7 +17,7 @@ public class Hash<K, V> {
 
     Hash(HashType type) {
         this.type = type;
-        type.setStepSize(storage.length);
+        type.setM1(storage.length);
     }
 
     public void insert(K key, V value) {
@@ -25,7 +25,7 @@ public class Hash<K, V> {
         int hash = start;
         type.resetI();
         while (storage[hash] != null && storage[hash] != noItem && storage[hash].key != key) {
-            hash = type.next_key(hash, storage.length);
+            hash = type.next_key(hash, key.hashCode(), storage.length);
             if (hash == start) {
                 throw new RuntimeException("Overflow");
             }
@@ -44,7 +44,7 @@ public class Hash<K, V> {
                 storage[hash] = noItem;
                 return;
             }
-            hash = type.next_key(hash, storage.length);
+            hash = type.next_key(hash, key.hashCode(), storage.length);
             if (hash == start) {
                 return;
             }
@@ -67,7 +67,7 @@ public class Hash<K, V> {
             if (storage[hash].keyHash == keyHash) {
                 return storage[hash];
             }
-            hash = type.next_key(hash, storage.length);
+            hash = type.next_key(hash, key.hashCode(), storage.length);
         }
         return null;
     }
@@ -103,22 +103,32 @@ public class Hash<K, V> {
         }
     }
 
+    @SuppressWarnings("unused")
     enum HashType {
         Linear, Quad, Double;
 
-        int stepSize;
+        int m1;
         int i = 0;
 
-        void setStepSize(int length) {
+        void setM1(int length) {
             for(int i=length-1; i > 1; i--) {
                 if (isPrime(i)) {
-                    stepSize = i;
+                    m1 = i;
+                    return;
                 }
             }
         }
 
+        int hashFunc2(int key) {
+            return 1 + Math.abs(key % m1);
+        }
+
         boolean isPrime(int n) {
-            for (int i=2; i*i < n; n++) if (n % i == 0) return false;
+            for (int i=2; i*i <= n; i++) {
+                if (n % i == 0) {
+                    return false;
+                }
+            }
             return true;
         }
 
@@ -126,15 +136,15 @@ public class Hash<K, V> {
             this.i = 0;
         }
 
-        int next_key(int key, int length) {
+        int next_key(int hash, int key, int length) {
             switch (name()) {
                 case "Linear":
-                    return (key + 1) % length;
+                    return (hash + 1) % length;
                 case "Quad":
                     i++;
-                    return (int) ((key + Math.pow(i, 2)) % length);
+                    return (int) ((hash + Math.pow(i, 2)) % length);
                 case "Double":
-                    return (key + stepSize) % length;
+                    return (hash + hashFunc2(key)) % length;
                 default:
                     throw new RuntimeException();
             }
