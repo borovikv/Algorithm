@@ -5,11 +5,12 @@ import java.util.Arrays;
 /**
  * Created by vborovic on 3/28/17.
  */
+@SuppressWarnings("WeakerAccess")
 public class Queue<T> {
     final T[] a;
-    int tail = 0;
-    int head = 0;
-    int size = 0;
+    private int tail = 0;
+    private int head = 0;
+    private int size = 0;
 
     public Queue(int size) {
         //noinspection unchecked
