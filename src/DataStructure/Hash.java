@@ -1,7 +1,5 @@
 package DataStructure;
 
-import org.jetbrains.annotations.Contract;
-
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
@@ -72,7 +70,6 @@ public class Hash<K, V> {
         return null;
     }
 
-    @Contract(pure = true)
     private int hash(K key) {
         return Math.abs(key.hashCode() % storage.length);
     }
