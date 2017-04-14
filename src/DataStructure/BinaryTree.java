@@ -28,84 +28,62 @@ public class BinaryTree {
     private void insertNode(Node node) {
         Node current = root;
         if (current == null) {
-            root = node;
+            setRoot(node);
             return;
         }
         while (true) {
             if (node.key < current.key) {
                 if (current.left == null) {
-                    current.left = node;
+                    current.setLeft(node);
                     break;
                 }
                 current = current.left;
             } else {
                 if (current.right == null) {
-                    current.right = node;
+                    current.setRight(node);
                     break;
                 }
                 current = current.right;
             }
-
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
-    void delete(int key) {
-        Node current = root;
-        Node parent = root;
-        boolean isLeft = true;
-        while (current.key != key && current != null) {
-            parent = current;
-            if (key < current.key) {
-                current = current.left;
-                isLeft = true;
-            } else {
-                current = current.right;
-                isLeft = false;
-            }
-        }
-        if (current == null) return;
-        if(current.left == null && current.right == null) {
-            if (current == root) {
-                root = null;
-            } else if (isLeft) {
-                parent.left = null;
-            } else {
-                parent.right = null;
-            }
-        } else if (current.right == null) {
-            if (current == root) {
-                root = current.left;
-            } else if (isLeft) {
-                parent.left = current.left;
-            } else {
-                parent.right = current.left;
-            }
-        } else if (current.left == null) {
-            if (current == root) {
-                root = current.right;
-            } else if (isLeft) {
-                parent.left = current.right;
-            } else {
-                parent.right = current.right;
-            }
-        } else {
-            Node min = min(current.right);
-            if (min != current.right) {
-                Node p = parent(min);
-                p.left = min.right;
-                min.right = current.right;
-            }
-            min.left = current.left;
-            if (current == root) {
-                root = min;
-            } else if (isLeft) {
-                parent.left = min;
-            } else {
-                parent.right = min;
-            }
-        }
+    private void setRoot(Node node) {
+        root = node;
+        root.parent = null;
+    }
 
+    void delete(int key) {
+        Node nodeToDelete = find(key);
+        if (nodeToDelete == null) return;
+
+        Node replacement;
+        if(nodeToDelete.left == null && nodeToDelete.right == null) {
+            replacement = null;
+        } else if (nodeToDelete.right == null) {
+            replacement = nodeToDelete.left;
+        } else if (nodeToDelete.left == null) {
+            replacement = nodeToDelete.right;
+        } else {
+            replacement = min(nodeToDelete.right);
+            if (replacement != nodeToDelete.right) {
+                replacement.parent.setLeft(replacement.right);
+                replacement.setRight(nodeToDelete.right);
+            }
+
+            replacement.setLeft(nodeToDelete.left);
+        }
+        removeNode(nodeToDelete, replacement);
+    }
+
+    private void removeNode(Node nodeToDelete, Node replacement) {
+        if (nodeToDelete == root) {
+            setRoot(replacement);
+        } else if (nodeToDelete.isLeft()) {
+            nodeToDelete.parent.setLeft(replacement);
+        } else {
+            nodeToDelete.parent.setRight(replacement);
+        }
     }
 
     private Node min(Node root) {
@@ -114,16 +92,6 @@ public class BinaryTree {
             min = min.left;
         }
         return min;
-    }
-
-    private Node parent(Node node) {
-        Node parent = null;
-        Node current = root;
-        while (current != node) {
-            parent = current;
-            current = node.key < current.key ? current.left : current.right;
-        }
-        return parent;
     }
 
     @Override
@@ -155,7 +123,6 @@ public class BinaryTree {
 
         tree.delete(25);
         System.out.println(tree.root);
-        System.out.println(tree.parent(n));
     }
 }
 
@@ -163,11 +130,13 @@ class Node {
     int key;
     Node left;
     Node right;
+    Node parent;
 
     public Node(int key, Node left, Node right) {
         this.key = key;
         this.left = left;
         this.right = right;
+        parent = null;
     }
 
     @Override
@@ -181,5 +150,19 @@ class Node {
         } else {
             return key + "(" + left + ")";
         }
+    }
+
+    public void setLeft(Node node) {
+        this.left = node;
+        if (node != null) node.parent = this;
+    }
+
+    public void setRight(Node node) {
+        this.right = node;
+        if (node != null) node.parent = this;
+    }
+
+    public boolean isLeft() {
+        return parent.left == this;
     }
 }
